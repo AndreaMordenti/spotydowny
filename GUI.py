@@ -5,13 +5,14 @@ import glob
 import json
 
 from appJar import gui
+from os.path import basename
 
 # handle button events
 def press(button):
 
 	#getting current location
 	curr_dir = os.getcwd() + '/'
-	default_folder = curr_dir + 'Music'
+	target_folder = curr_dir + 'Music'
 	folder = app.getEntry("Folder")
 
 	option = app.getOptionBox('Download Type')
@@ -28,7 +29,7 @@ def press(button):
 	else:
 		#Download pressed
 		if folder != "":
-			default_folder = folder
+			target_folder = folder
 
 		if len(input_text) > 0:
 			add_to_file(option,input_text)
@@ -48,7 +49,7 @@ def press(button):
 
 				if input_text.find('https') == -1:
 					input_text = '"' + input_text+ '"'
-				command = 'python3 ' + curr_dir +'spotdl.py --folder ' + default_folder +' --song ' + input_text
+				command = 'python3 ' + curr_dir +'spotdl.py --folder ' + target_folder +' --song ' + input_text
 				print(command)
 				process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 
@@ -61,16 +62,20 @@ def press(button):
 				process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 				process.wait()
 
-				download_from_list(default_folder,curr_dir)
+				download_from_list(target_folder,curr_dir)
 
 
 			elif(option == 'Username'):
 
 				url, user_code = input_text.split("user/")
 				print(user_code)
+
+				target_folder = os.path.join(target_folder,user_code)
+				command = 'mkdir ' + target_folder
+				os.system(command)
 				command = 'python3 ' + curr_dir +'spotdl.py --username ' + user_code
 				os.system(command)
-				download_from_list(default_folder,curr_dir)
+				download_from_list(target_folder,curr_dir)
 			else:
 				print("Input Error")
 			
@@ -91,25 +96,31 @@ def add_to_file(option,input_text):
 	print('Added')
 	app.clearEntry("Search")
 
-def download_from_list(default_folder,curr_dir,folder_creation=True):
-	for file in glob.glob("*.txt"):
+def download_from_list(target_folder,curr_dir,folder_creation=True):
+	target_folder = target_folder.split()
 
-		if file != 'LICENSE.txt' and file != 'requirements.txt':
+	for file in glob.glob("*.txt"):
+		if file != 'LICENSE.txt' and file != 'requirements.txt' and file != 'meta.txt':
 			print('Playlist file founded!')
-			print(file)
 
 			if folder_creation:
 				print('Create playlist directory')
 				folder_name = file.replace('.txt','')
-				command = 'cd '+ default_folder + '; mkdir ' + folder_name
-				default_folder = os.path.join(default_folder,folder_name)
+				folder_name = folder_name.split()
+				playlist_folder = os.path.join(target_folder[0],folder_name[0])
+				command = 'mkdir ' + playlist_folder
 				os.system(command)
 
-			command = 'python3 ' + curr_dir +'spotdl.py --folder ' + default_folder + ' --list=' + file
+			command = 'python3 ' + curr_dir +'spotdl.py --folder ' + playlist_folder + ' --list=' + file
 			os.system(command)
 
+			command = 'cd ..'
+			os.system(command)
 			#clear playist directory
-			command = 'rm  ' + file
+			print('...removing...')
+			print(file)
+			command = 'rm  ' + os.path.join(curr_dir,file)
+			
 	app.clearEntry("Search")
 
 
@@ -123,7 +134,7 @@ app.addDirectoryEntry("Folder")
 
 
 # add & configure widgets - widgets get a name, to help referencing them later
-app.addOptionBox("Download Type", ["Song","Playlist","Username"])
+app.addOptionBox("Download Type", ["Username","Playlist","Song"])
 
 app.addLabelEntry("Search")
 

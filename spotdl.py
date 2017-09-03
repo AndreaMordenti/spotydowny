@@ -227,6 +227,13 @@ def download_song(file_name, content):
     if link is None:
         return False
     else:
+        #Check whether mp3 file already exist
+        file_to_check = '{0}{1}'.format(os.path.join(args.folder, file_name.replace('_',' ')), '.mp3')
+        print('******')
+        print(file_to_check)
+        if os.path.isfile(file_to_check):
+            return False
+
         link.download(
             filepath='{0}{1}'.format(os.path.join(args.folder, file_name), args.input_ext))
         return True
@@ -376,7 +383,7 @@ def grab_single(raw_song, number=None):
             if not args.no_metadata:
                 metadata.embed(os.path.join(args.folder, output_song), meta_tags)
         else:
-            print('No audio streams available')
+            print('No audio streams available or song already downloaded')
 
 
 class TestArgs(object):
