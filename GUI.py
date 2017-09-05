@@ -11,12 +11,17 @@ from os.path import basename
 def press(button):
 
 	#getting current location
-	curr_dir = os.getcwd() + '/'
-	target_folder = curr_dir + 'Music'
+	curr_dir = os.getcwd()
+	launcher_path = os.path.join(curr_dir,'spotdl.py')
+	target_folder = os.path.join(curr_dir,'Music')
+	print(target_folder)
 	folder = app.getEntry("Folder")
 
 	option = app.getOptionBox('Download Type')
 	input_text = app.getEntry('Search')
+	
+	print('Download type -->')
+	print(option)
 
 	if button == "Shutdown":
 		app.stop()
@@ -46,10 +51,9 @@ def press(button):
 			option, input_text = entry.split("&&&")
 
 			if(option == 'Song'):
-
 				if input_text.find('https') == -1:
 					input_text = '"' + input_text+ '"'
-				command = 'python3 ' + curr_dir +'spotdl.py --folder ' + target_folder +' --song ' + input_text
+				command = 'python ' + launcher_path + ' --folder ' + target_folder +' --song ' + input_text
 				print(command)
 				process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 
@@ -58,7 +62,7 @@ def press(button):
 
 			elif(option == 'Playlist'):
 
-				command = 'python3 ' + curr_dir +'spotdl.py --playlist ' + input_text
+				command = 'python ' + launcher_path +' --playlist ' + input_text
 				process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 				process.wait()
 
@@ -73,7 +77,7 @@ def press(button):
 				target_folder = os.path.join(target_folder,user_code)
 				command = 'mkdir ' + target_folder
 				os.system(command)
-				command = 'python3 ' + curr_dir +'spotdl.py --username ' + user_code
+				command = 'python ' + launcher_path +' --username ' + user_code
 				os.system(command)
 				download_from_list(target_folder,curr_dir)
 			else:
@@ -111,7 +115,7 @@ def download_from_list(target_folder,curr_dir,folder_creation=True):
 				command = 'mkdir ' + playlist_folder
 				os.system(command)
 
-			command = 'python3 ' + curr_dir +'spotdl.py --folder ' + playlist_folder + ' --list=' + file
+			command = 'python ' + launcher_path +' --folder ' + playlist_folder + ' --list=' + file
 			os.system(command)
 
 			command = 'cd ..'
@@ -128,13 +132,11 @@ def download_from_list(target_folder,curr_dir,folder_creation=True):
 app = gui("Spotify Downloader", "400x200")
 app.setBg("white")
 app.setFont(16)
-#app.addCheckBox('Playlist Folder')
-#app.setCheckBox('Playlist Folder')
 app.addDirectoryEntry("Folder")
 
 
 # add & configure widgets - widgets get a name, to help referencing them later
-app.addOptionBox("Download Type", ["Username","Playlist","Song"])
+app.addOptionBox("Download Type", ["Song","Playlist","Username"])
 
 app.addLabelEntry("Search")
 

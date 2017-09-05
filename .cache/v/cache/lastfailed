@@ -1,0 +1,7 @@
+{
+  "test/test_simple.py::test_check_exists2": true,
+  "test/test_simple.py::test_convert": true,
+  "test/test_spotify.py::test_check_exists2": true,
+  "test/test_spotify.py::test_convert": true,
+  "test/test_spotify.py::test_metadata": true
+}
