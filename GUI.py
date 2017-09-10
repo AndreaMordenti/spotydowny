@@ -61,21 +61,24 @@ def press(button):
 				command = 'python3 ' + curr_dir +'spotdl.py --playlist ' + input_text
 				process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 				process.wait()
-
 				download_from_list(target_folder,curr_dir)
 
 
 			elif(option == 'Username'):
 
 				url, user_code = input_text.split("user/")
-				print(user_code)
-
 				target_folder = os.path.join(target_folder,user_code)
 				command = 'mkdir ' + target_folder
 				os.system(command)
 				command = 'python3 ' + curr_dir +'spotdl.py --username ' + user_code
 				os.system(command)
 				download_from_list(target_folder,curr_dir)
+
+			elif(option == 'Album'):
+				
+				command = 'python3 ' + curr_dir + 'spotdl.py -A ' + input_text
+				os.system(command)
+
 			else:
 				print("Input Error")
 			
@@ -134,7 +137,7 @@ app.addDirectoryEntry("Folder")
 
 
 # add & configure widgets - widgets get a name, to help referencing them later
-app.addOptionBox("Download Type", ["Username","Playlist","Song"])
+app.addOptionBox("Download Type", ["Album","Playlist","Song","Username"])
 
 app.addLabelEntry("Search")
 

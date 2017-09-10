@@ -44,6 +44,8 @@ def get_arguments():
     group.add_argument(
         '-u', '--username',
         help="load songs from user's playlist into <playlist_name>.txt")
+    group.add_argument(
+        '-A', '--album', help='downalod songs from an entire album')
     parser.add_argument(
         '-m', '--manual', default=False,
         help='choose the song to download manually', action='store_true')
@@ -66,6 +68,7 @@ def get_arguments():
     parser.add_argument(
         '-o', '--output_ext', default='.mp3',
         help='prefered output extension .mp3 or .m4a (AAC)')
+
 
     return parser.parse_args()
 

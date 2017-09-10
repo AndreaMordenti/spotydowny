@@ -162,6 +162,35 @@ def get_youtube_title(content, number=None):
     else:
         return '{0}. {1}'.format(number, title)
 
+def feed_album(album):
+    album_tracks = spotify.album_tracks(album, limit=50, offset=0)
+    for tracks in album_tracks['items']:
+        print(tracks['name'])
+        print(tracks['href'])
+        # nth input song
+        number = 1
+        raw_song = tracks['href']
+        raw_song = raw_song.replace('tracks','track').replace('api','open').replace('v1/','')
+        print('Fetching album: ' + tracks['name'])
+        try:
+            grab_single(raw_song, number=number)
+            # token expires after 1 hour
+            # detect network problems
+        except (urllib.request.URLError, TypeError, IOError):
+                # wait 0.5 sec to avoid infinite looping
+            new_token = misc.generate_token()
+            #global spotify
+            spotify = spotipy.Spotify(auth=new_token)
+            print('network issue')
+            time.sleep(0.5)
+            continue
+        except KeyboardInterrupt:
+            misc.grace_quit()
+        finally:
+            print('')
+        number += 1
+
+
 
 def feed_playlist(username):
     """Fetch user playlists when using the -u option."""
@@ -349,6 +378,7 @@ def grab_playlist(playlist):
 
 def grab_single(raw_song, number=None):
     """Logic behind downloading a song."""
+    print('grab single ' + raw_song)
     if number:
         islist = True
     else:
@@ -367,6 +397,7 @@ def grab_single(raw_song, number=None):
         songname = content.title
     else:
         songname = generate_songname(meta_tags)
+        print('Song -->' + songname)
     file_name = misc.sanitize_title(songname)
 
     if not check_exists(file_name, raw_song, islist=islist):
@@ -390,20 +421,24 @@ class TestArgs(object):
     manual = False
     input_ext = '.m4a'
     output_ext = '.mp3'
-    folder = 'Music/'
 
 # token is mandatory when using Spotify's API
 # https://developer.spotify.com/news-stories/2017/01/27/removing-unauthenticated-calls-to-the-web-api/
 token = misc.generate_token()
 spotify = spotipy.Spotify(auth=token)
 
+print('main')
+
 if __name__ == '__main__':
     os.chdir(sys.path[0])
     args = misc.get_arguments()
 
+    print(args)
+
     misc.filter_path(args.folder)
 
     if args.song:
+        print('song')
         grab_single(raw_song=args.song)
     elif args.list:
         grab_list(text_file=args.list)
@@ -411,10 +446,13 @@ if __name__ == '__main__':
         grab_playlist(playlist=args.playlist)
     elif args.username:
         feed_playlist(username=args.username)
+    elif args.album:
+        feed_album(album=args.album)
 
     #renaming song names
     for filename in os.listdir(args.folder):
         if filename != '.DS_Store':
+
             os.rename(args.folder + '/' +filename, args.folder + '/' + filename.replace('_',' '))
 else:
     misc.filter_path('Music')
