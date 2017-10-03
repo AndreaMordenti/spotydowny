@@ -14,6 +14,11 @@ import sys
 import os
 import time
 
+
+def generate_token():
+    #todo
+    return 1
+
 def generate_songname(tags):
     """Generate a string of the format '[artist] - [song]' for the given spotify song."""
     raw_song = u'{0} - {1}'.format(tags['artists'][0]['name'], tags['name'])
@@ -163,6 +168,8 @@ def get_youtube_title(content, number=None):
         return '{0}. {1}'.format(number, title)
 
 def feed_album(album):
+    new_token = misc.generate_token()
+    spotify = spotipy.Spotify(auth=new_token)
     album_tracks = spotify.album_tracks(album, limit=50, offset=0)
     for tracks in album_tracks['items']:
         print(tracks['name'])
