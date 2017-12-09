@@ -7,6 +7,7 @@ from core import misc
 from bs4 import BeautifulSoup
 from titlecase import titlecase
 from slugify import slugify
+
 import spotipy
 import pafy
 import urllib.request
@@ -16,8 +17,9 @@ import time
 
 
 def generate_token():
-    #todo
-    return 1
+    new_token = misc.generate_token()
+    spotify = spotipy.Spotify(auth=new_token)
+    return spotify
 
 def generate_songname(tags):
     """Generate a string of the format '[artist] - [song]' for the given spotify song."""
@@ -29,7 +31,10 @@ def generate_metadata(raw_song):
     """Fetch a song's metadata from Spotify."""
     if misc.is_spotify(raw_song):
         # fetch track information directly if it is spotify link
+
+        spotify = generate_token()
         meta_tags = spotify.track(raw_song)
+
     else:
         # otherwise search on spotify and fetch information from first result
         try:
@@ -65,7 +70,12 @@ def generate_youtube_url(raw_song, tries_remaining=5):
     if tries_remaining == 0:
         return
 
-    meta_tags = generate_metadata(raw_song)
+    try:
+        meta_tags = generate_metadata(raw_song)
+    except spotipy.oauth2.SpotifyOauthError:
+        spotify = generate_token()
+        meta_tags = generate_metadata(raw_song)
+
     if meta_tags is None:
         song = raw_song
         search_url = misc.generate_search_url(song, viewsort=False)
@@ -250,6 +260,10 @@ def write_tracks(playlist):
             else:
                 break
 
+def update_song_base(file_name, content):
+    file_to_check = '{0}{1}'.format(os.path.join(args.folder, file_name.replace('_', ' ')), '.mp3')
+    if os.path.isfile(file_to_check):
+        return False
 
 def download_song(file_name, content):
     """Download the audio file from YouTube."""
@@ -310,6 +324,21 @@ def check_exists(music_file, raw_song, islist=True):
                   #  return True
     return False
 
+def get_song_name(raw_song):
+    try:
+        meta_tags = generate_metadata(raw_song)
+        content = go_pafy(raw_song)
+    except (urllib.request.URLError, TypeError, IOError, spotipy.oauth2.SpotifyOauthError):
+        spotify = generate_token()
+        meta_tags = generate_metadata(raw_song)
+    if meta_tags is None:
+        songname = content.title
+    else:
+        songname = generate_songname(meta_tags)
+        print('Song -->' + songname)
+    file_name = misc.sanitize_title(songname)
+    file_name = file_name + ".mp3"
+    return filename
 
 def grab_list(text_file):
     """Download all songs from the list."""
@@ -327,12 +356,14 @@ def grab_list(text_file):
     for raw_song in lines:
         try:
             grab_single(raw_song, number=number)
+            get_song_name(raw_song)
         # token expires after 1 hour
         except spotipy.oauth2.SpotifyOauthError:
             # refresh token when it expires
-            new_token = misc.generate_token()
+            #new_token = misc.generate_token()
             global spotify
-            spotify = spotipy.Spotify(auth=new_token)
+            #spotify = spotipy.Spotify(auth=new_token)
+            spotify = generate_token()
             grab_single(raw_song, number=number)
         # detect network problems
         except (urllib.request.URLError, TypeError, IOError):
@@ -354,7 +385,8 @@ def grab_list(text_file):
         number += 1
 
     #remove the list file 
-    os.remove(os.path.join(text_file))
+    #os.remove(os.path.join(text_file))
+    #not anymore, we want them to be synchronized
 
 
 def grab_playlist(playlist):
@@ -399,7 +431,11 @@ def grab_single(raw_song, number=None):
     print(get_youtube_title(content, number))
 
     # generate file name of the song to download
-    meta_tags = generate_metadata(raw_song)
+    try:
+        meta_tags = generate_metadata(raw_song)
+    except (urllib.request.URLError, TypeError, IOError, spotipy.oauth2.SpotifyOauthError):
+        spotify = generate_token()
+        meta_tags = generate_metadata(raw_song)
     if meta_tags is None:
         songname = content.title
     else:
@@ -453,6 +489,7 @@ if __name__ == '__main__':
         grab_playlist(playlist=args.playlist)
     elif args.username:
         feed_playlist(username=args.username)
+
     elif args.album:
         feed_album(album=args.album)
 

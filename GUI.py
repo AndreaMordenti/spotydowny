@@ -25,10 +25,21 @@ def press(button):
     target_folder = os.path.join(curr_dir, 'Music')
     print(target_folder)
     folder = app.getEntry("Folder")
-
-    option = app.getOptionBox('Download Type')
     input_text = app.getEntry('Search')
 
+    if len(input_text) > 0:
+        if "playlist" in input_text:
+            option = "Playlist"
+        elif "user" in input_text:
+            option = "User"
+        elif "album" in input_text:
+            option = "Album"
+        else:
+            option = "Song"
+    else:
+        print("error, please input a value inside input box")
+
+    #option = app.getOptionBox('Download Type')
     print('Download type -->')
     print(option)
 
@@ -117,7 +128,7 @@ def download_from_list(launch_path,target_folder, curr_dir, folder_creation=True
 
     for file in glob.glob("*.txt"):
         if file != 'LICENSE.txt' and file != 'requirements.txt' and file != 'meta.txt':
-            print('Playlist file founded!')
+            print('Playlist file found!')
 
             if folder_creation:
                 print('Create playlist directory')
@@ -147,7 +158,7 @@ app.setFont(16)
 app.addDirectoryEntry("Folder")
 
 # add & configure widgets - widgets get a name, to help referencing them later
-app.addOptionBox("Download Type", ["Album", "Playlist", "Song", "Username"])
+# app.addOptionBox("Download Type", ["Album", "Playlist", "Song", "Username"])
 
 app.addLabelEntry("Search")
 
